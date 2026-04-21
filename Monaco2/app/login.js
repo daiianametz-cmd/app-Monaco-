@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useContext, useState } from "react";
 import {
     Alert,
+    Image,
     Text,
     TextInput,
     TouchableOpacity,
@@ -9,6 +10,8 @@ import {
 } from "react-native";
 import { AuthContext } from "../src/context/AuthContext";
 import { db } from "../src/db/database";
+
+const logo = require("../assets/images/logo.jpeg");
 
 export default function Login() {
   const [user, setUser] = useState("");
@@ -43,7 +46,6 @@ export default function Login() {
       } else {
         router.replace("/(tabs)/ventas");
       }
-
     } catch (e) {
       console.log("❌ LOGIN ERROR:", e);
       Alert.alert("Error", "Algo salió mal al iniciar sesión");
@@ -51,24 +53,45 @@ export default function Login() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 20, backgroundColor: "#f5f6fa" }}>
-      
-      <View style={{
-        backgroundColor: "#fff",
-        padding: 25,
-        borderRadius: 15,
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 5
-      }}>
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        padding: 20,
+        backgroundColor: "#f5f6fa",
+      }}
+    >
+      <View
+        style={{
+          backgroundColor: "#fff",
+          padding: 25,
+          borderRadius: 15,
+          shadowColor: "#000",
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+          elevation: 5,
+        }}
+      >
+        {/* 🔥 LOGO */}
+        <View style={{ alignItems: "center", marginBottom: 20 }}>
+          <Image
+            source={logo}
+            style={{
+              width: 140,
+              height: 140,
+              resizeMode: "contain",
+            }}
+          />
+        </View>
 
-        <Text style={{
-          fontSize: 26,
-          fontWeight: "bold",
-          marginBottom: 20,
-          textAlign: "center"
-        }}>
+        <Text
+          style={{
+            fontSize: 26,
+            fontWeight: "bold",
+            marginBottom: 20,
+            textAlign: "center",
+          }}
+        >
           🔐 Iniciar sesión
         </Text>
 
@@ -106,16 +129,14 @@ export default function Login() {
             backgroundColor: "#2d8cff",
             padding: 14,
             borderRadius: 10,
-            alignItems: "center"
+            alignItems: "center",
           }}
         >
           <Text style={{ color: "#fff", fontWeight: "bold" }}>
             Ingresar
           </Text>
         </TouchableOpacity>
-
       </View>
-
     </View>
   );
 }
