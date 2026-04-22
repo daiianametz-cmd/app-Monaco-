@@ -4,14 +4,15 @@ import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import { useCallback, useContext, useEffect, useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AuthContext } from "../../src/context/AuthContext";
@@ -88,6 +89,21 @@ export default function Insumos() {
     setTimeout(() => setMensaje(""), 2000);
   };
 
+  // =========================
+  // 📌 LOG DE MOVIMIENTOS
+  // =========================
+  const logMovimiento = async (tipo, descripcion) => {
+    try {
+      await db.runAsync(
+        `INSERT INTO movimientos (tipo, descripcion, fecha)
+         VALUES (?, ?, datetime('now'))`,
+        [tipo, descripcion]
+      );
+    } catch (e) {
+      console.log("Error log movimiento:", e);
+    }
+  };
+
   const cargar = async () => {
     const res = await db.getAllAsync(
       "SELECT * FROM insumos ORDER BY nombre ASC"
@@ -130,6 +146,11 @@ export default function Insumos() {
       ]
     );
 
+    await logMovimiento(
+      "ALTA",
+      `Se creó insumo: ${nombreFinal}`
+    );
+
     setNombre("");
     setCategoria("");
     setCantidad("");
@@ -139,10 +160,33 @@ export default function Insumos() {
     cargar();
   };
 
-  const eliminar = async (id) => {
-    await db.runAsync("DELETE FROM insumos WHERE id = ?", [id]);
-    mostrarMensaje("Eliminado");
-    cargar();
+  // 🗑️ eliminar con confirmación
+  const eliminar = (item) => {
+    Alert.alert(
+      "Eliminar insumo",
+      `¿Estás seguro que deseas eliminar "${item.nombre}"?`,
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            await db.runAsync("DELETE FROM insumos WHERE id = ?", [item.id]);
+
+            await logMovimiento(
+              "BAJA",
+              `Se eliminó insumo: ${item.nombre}`
+            );
+
+            mostrarMensaje("Eliminado");
+            cargar();
+          },
+        },
+      ]
+    );
   };
 
   const abrirModal = (item) => {
@@ -166,6 +210,11 @@ export default function Insumos() {
        SET cantidad = cantidad + ? 
        WHERE id = ?`,
       [valor, insumoSeleccionado.id]
+    );
+
+    await logMovimiento(
+      "STOCK",
+      `Se agregó ${cantidadAgregar} a ${insumoSeleccionado.nombre}`
     );
 
     setModalVisible(false);
@@ -265,7 +314,7 @@ export default function Insumos() {
                   <Ionicons name="add-circle" size={26} color="#27ae60" />
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => eliminar(item.id)}>
+                <TouchableOpacity onPress={() => eliminar(item)}>
                   <Ionicons name="trash" size={24} color="#e74c3c" />
                 </TouchableOpacity>
               </View>
@@ -291,6 +340,14 @@ export default function Insumos() {
 
                 <TouchableOpacity onPress={confirmarAgregar} style={boton}>
                   <Text style={botonText}>Confirmar</Text>
+                </TouchableOpacity>
+
+                {/* CANCELAR */}
+                <TouchableOpacity
+                  onPress={() => setModalVisible(false)}
+                  style={[boton, { backgroundColor: "#999", marginTop: 10 }]}
+                >
+                  <Text style={botonText}>Cancelar</Text>
                 </TouchableOpacity>
 
               </View>

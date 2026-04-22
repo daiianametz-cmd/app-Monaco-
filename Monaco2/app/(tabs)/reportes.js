@@ -27,6 +27,7 @@ export default function Reportes() {
     { label: "VENTAS", value: "ventas" },
     { label: "PRODUCCIÓN", value: "produccion" },
     { label: "EMPAQUETADO", value: "empaquetado" },
+    { label: "INSUMOS", value: "insumos" },
   ];
 
   const tiposHamburguesa = [
@@ -79,9 +80,19 @@ export default function Reportes() {
     try {
       setError("");
 
-      const res = await db.getAllAsync(
-        `SELECT * FROM ${tipo} ORDER BY fecha DESC`
-      );
+      let res = [];
+
+      if (tipo === "insumos") {
+        res = await db.getAllAsync(
+          `SELECT * FROM movimientos 
+           WHERE tipo IN ('ALTA','BAJA','STOCK')
+           ORDER BY fecha DESC`
+        );
+      } else {
+        res = await db.getAllAsync(
+          `SELECT * FROM ${tipo} ORDER BY fecha DESC`
+        );
+      }
 
       let filtrados = res;
 
@@ -133,30 +144,38 @@ export default function Reportes() {
           📊 Reportes
         </Text>
 
-        {/* TABS */}
-        <View style={{ flexDirection: "row", marginTop: 15, gap: 10 }}>
-          {tabs.map((t) => (
-            <TouchableOpacity
-              key={t.value}
-              onPress={() => {
-                setTipo(t.value);
-                setFiltro("todos");
-              }}
-              style={{
-                paddingVertical: 10,
-                paddingHorizontal: 14,
-                borderRadius: 12,
-                backgroundColor: tipo === t.value ? "#4da6ff" : "#e0e0e0",
-              }}
-            >
-              <Text style={{ color: tipo === t.value ? "#fff" : "#333" }}>
-                {t.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {/* TABS (FIX SCROLL) */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ marginTop: 15, gap: 10 }}
+        >
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            {tabs.map((t) => (
+              <TouchableOpacity
+                key={t.value}
+                onPress={() => {
+                  setTipo(t.value);
+                  setFiltro("todos");
+                }}
+                style={{
+                  paddingVertical: 10,
+                  paddingHorizontal: 16,
+                  borderRadius: 12,
+                  backgroundColor: tipo === t.value ? "#4da6ff" : "#e0e0e0",
+                  minWidth: 110,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: tipo === t.value ? "#fff" : "#333" }}>
+                  {t.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
 
-        {/* 🔥 NUEVO: FILTRO POR TIPO HAMBURGUESA */}
+        {/* FILTROS */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -199,59 +218,33 @@ export default function Reportes() {
         </View>
 
         {/* LISTA */}
-        {data.map((item) => {
-          const abierto = abiertos[item.id];
+        {data.map((item) => (
+          <View
+            key={item.id}
+            style={{
+              backgroundColor: "#fff",
+              padding: 15,
+              borderRadius: 15,
+              marginTop: 12,
+            }}
+          >
+            <Text>📅 {formatearFecha(item.fecha)}</Text>
 
-          return (
-            <View
-              key={item.id}
-              style={{
-                backgroundColor: "#fff",
-                padding: 15,
-                borderRadius: 15,
-                marginTop: 12,
-              }}
-            >
-              <Text>📅 {formatearFecha(item.fecha)}</Text>
-              <Text>🍔 {item.tipo || item.producto}</Text>
-
-              <Text style={{ fontWeight: "600" }}>
-                ⚖️ {(item.kg || item.cantidad)} kg
-              </Text>
-
-              <Text>👤 {item.usuario}</Text>
-
-              {tipo === "produccion" && (
-                <>
-                  <TouchableOpacity
-                    onPress={() => toggleDetalle(item.id)}
-                    style={{
-                      marginTop: 10,
-                      backgroundColor: "#4da6ff",
-                      padding: 8,
-                      borderRadius: 8,
-                      alignSelf: "flex-start",
-                    }}
-                  >
-                    <Text style={{ color: "#fff" }}>
-                      {abierto ? "Cerrar detalle" : "Ver detalle"}
-                    </Text>
-                  </TouchableOpacity>
-
-                  {abierto && (
-                    <View style={{ marginTop: 10 }}>
-                      {detalles[item.id]?.map((d, i) => (
-                        <Text key={i}>
-                          🧂 {d.insumo}: {d.cantidad} {d.unidad}
-                        </Text>
-                      ))}
-                    </View>
-                  )}
-                </>
-              )}
-            </View>
-          );
-        })}
+            {tipo === "insumos" ? (
+              <>
+                <Text>🧾 {item.descripcion}</Text>
+              </>
+            ) : (
+              <>
+                <Text>🍔 {item.tipo || item.producto}</Text>
+                <Text style={{ fontWeight: "600" }}>
+                  ⚖️ {(item.kg || item.cantidad)} kg
+                </Text>
+                <Text>👤 {item.usuario}</Text>
+              </>
+            )}
+          </View>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
