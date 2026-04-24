@@ -61,7 +61,7 @@ const convertirDesdeKg = (valor, unidad) => {
 };
 
 export default function Insumos() {
-  const { role } = useContext(AuthContext);
+  const { role, user } = useContext(AuthContext);
 
   const [insumos, setInsumos] = useState([]);
 
@@ -90,14 +90,14 @@ export default function Insumos() {
   };
 
   // =========================
-  // 📌 LOG DE MOVIMIENTOS
+  // 📌 LOG DE MOVIMIENTOS (FIX FINAL)
   // =========================
   const logMovimiento = async (tipo, descripcion) => {
     try {
       await db.runAsync(
-        `INSERT INTO movimientos (tipo, descripcion, fecha)
-         VALUES (?, ?, datetime('now'))`,
-        [tipo, descripcion]
+        `INSERT INTO movimientos (tipo, descripcion, fecha, usuario)
+         VALUES (?, ?, datetime('now'), ?)`,
+        [tipo, descripcion, user || "desconocido"]
       );
     } catch (e) {
       console.log("Error log movimiento:", e);
@@ -146,10 +146,7 @@ export default function Insumos() {
       ]
     );
 
-    await logMovimiento(
-      "ALTA",
-      `Se creó insumo: ${nombreFinal}`
-    );
+    await logMovimiento("ALTA", `Se creó insumo: ${nombreFinal}`);
 
     setNombre("");
     setCategoria("");
@@ -160,16 +157,13 @@ export default function Insumos() {
     cargar();
   };
 
-  // 🗑️ eliminar con confirmación
+  // 🗑️ eliminar
   const eliminar = (item) => {
     Alert.alert(
       "Eliminar insumo",
       `¿Estás seguro que deseas eliminar "${item.nombre}"?`,
       [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
+        { text: "Cancelar", style: "cancel" },
         {
           text: "Eliminar",
           style: "destructive",
@@ -214,7 +208,7 @@ export default function Insumos() {
 
     await logMovimiento(
       "STOCK",
-      `Se agregó ${cantidadAgregar} a ${insumoSeleccionado.nombre}`
+      `Se agregó ${cantidadAgregar} ${insumoSeleccionado.unidad} a ${insumoSeleccionado.nombre}`
     );
 
     setModalVisible(false);
@@ -342,7 +336,6 @@ export default function Insumos() {
                   <Text style={botonText}>Confirmar</Text>
                 </TouchableOpacity>
 
-                {/* CANCELAR */}
                 <TouchableOpacity
                   onPress={() => setModalVisible(false)}
                   style={[boton, { backgroundColor: "#999", marginTop: 10 }]}

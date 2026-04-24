@@ -1,12 +1,15 @@
 import { router } from "expo-router";
 import { useContext, useState } from "react";
 import {
-    Alert,
-    Image,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { AuthContext } from "../src/context/AuthContext";
 import { db } from "../src/db/database";
@@ -53,90 +56,95 @@ export default function Login() {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        padding: 20,
-        backgroundColor: "#f5f6fa",
-      }}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#f5f6fa" }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View
-        style={{
-          backgroundColor: "#fff",
-          padding: 25,
-          borderRadius: 15,
-          shadowColor: "#000",
-          shadowOpacity: 0.1,
-          shadowRadius: 10,
-          elevation: 5,
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          padding: 20,
         }}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* 🔥 LOGO */}
-        <View style={{ alignItems: "center", marginBottom: 20 }}>
-          <Image
-            source={logo}
+        <View
+          style={{
+            backgroundColor: "#fff",
+            padding: 25,
+            borderRadius: 15,
+            shadowColor: "#000",
+            shadowOpacity: 0.1,
+            shadowRadius: 10,
+            elevation: 5,
+          }}
+        >
+          {/* LOGO */}
+          <View style={{ alignItems: "center", marginBottom: 20 }}>
+            <Image
+              source={logo}
+              style={{
+                width: 140,
+                height: 140,
+                resizeMode: "contain",
+              }}
+            />
+          </View>
+
+          <Text
             style={{
-              width: 140,
-              height: 140,
-              resizeMode: "contain",
+              fontSize: 26,
+              fontWeight: "bold",
+              marginBottom: 20,
+              textAlign: "center",
+            }}
+          >
+            🔐 Iniciar sesión
+          </Text>
+
+          <TextInput
+            placeholder="Usuario"
+            value={user}
+            onChangeText={setUser}
+            autoCapitalize="none"
+            style={{
+              borderWidth: 1,
+              borderColor: "#ddd",
+              padding: 12,
+              marginBottom: 12,
+              borderRadius: 10,
             }}
           />
+
+          <TextInput
+            placeholder="Contraseña"
+            value={pass}
+            onChangeText={setPass}
+            secureTextEntry
+            style={{
+              borderWidth: 1,
+              borderColor: "#ddd",
+              padding: 12,
+              marginBottom: 20,
+              borderRadius: 10,
+            }}
+          />
+
+          <TouchableOpacity
+            onPress={login}
+            style={{
+              backgroundColor: "#2d8cff",
+              padding: 14,
+              borderRadius: 10,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "bold" }}>
+              Ingresar
+            </Text>
+          </TouchableOpacity>
         </View>
-
-        <Text
-          style={{
-            fontSize: 26,
-            fontWeight: "bold",
-            marginBottom: 20,
-            textAlign: "center",
-          }}
-        >
-          🔐 Iniciar sesión
-        </Text>
-
-        <TextInput
-          placeholder="Usuario"
-          value={user}
-          onChangeText={setUser}
-          autoCapitalize="none"
-          style={{
-            borderWidth: 1,
-            borderColor: "#ddd",
-            padding: 12,
-            marginBottom: 12,
-            borderRadius: 10,
-          }}
-        />
-
-        <TextInput
-          placeholder="Contraseña"
-          value={pass}
-          onChangeText={setPass}
-          secureTextEntry
-          style={{
-            borderWidth: 1,
-            borderColor: "#ddd",
-            padding: 12,
-            marginBottom: 20,
-            borderRadius: 10,
-          }}
-        />
-
-        <TouchableOpacity
-          onPress={login}
-          style={{
-            backgroundColor: "#2d8cff",
-            padding: 14,
-            borderRadius: 10,
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: "#fff", fontWeight: "bold" }}>
-            Ingresar
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

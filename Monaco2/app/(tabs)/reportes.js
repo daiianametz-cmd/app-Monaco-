@@ -49,6 +49,24 @@ export default function Reportes() {
 
   const formatearFecha = (f) => new Date(f).toLocaleString();
 
+  const formatearMovimiento = (item) => {
+    const cantidad = item.kg || item.cantidad || 0;
+    const unidad = item.unidad;
+
+    const agregarKg = tipo === "ventas" || tipo === "produccion" || tipo === "empaquetado";
+
+    // 🔥 FIX PEDIDO: SIEMPRE KG EN ESOS 3 MODULOS
+    if (!unidad && agregarKg) return `${cantidad} kg`;
+
+    if (unidad === "kg") return `${(cantidad / 1000).toFixed(2)} kg`;
+    if (unidad === "g") return `${cantidad} g`;
+    if (unidad === "ml") return `${cantidad} ml`;
+    if (unidad === "litro") return `${(cantidad / 1000).toFixed(2)} lt`;
+    if (unidad === "atado") return `${cantidad} atado${cantidad === 1 ? "" : "s"}`;
+
+    return agregarKg ? `${cantidad} kg` : `${cantidad} ${unidad || ""}`;
+  };
+
   const toggleDetalle = async (id) => {
     if (tipo !== "produccion") return;
 
@@ -144,7 +162,7 @@ export default function Reportes() {
           📊 Reportes
         </Text>
 
-        {/* TABS (FIX SCROLL) */}
+        {/* TABS */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -176,46 +194,50 @@ export default function Reportes() {
         </ScrollView>
 
         {/* FILTROS */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ marginTop: 15 }}
-        >
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            {tiposHamburguesa.map((t) => (
-              <TouchableOpacity
-                key={t.value}
-                onPress={() => setFiltro(t.value)}
-                style={{
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  borderRadius: 10,
-                  backgroundColor:
-                    filtro === t.value ? "#4da6ff" : "#e0e0e0",
-                }}
-              >
-                <Text style={{ color: filtro === t.value ? "#fff" : "#333" }}>
-                  {t.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+        {tipo !== "insumos" && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 15 }}
+          >
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              {tiposHamburguesa.map((t) => (
+                <TouchableOpacity
+                  key={t.value}
+                  onPress={() => setFiltro(t.value)}
+                  style={{
+                    paddingVertical: 8,
+                    paddingHorizontal: 12,
+                    borderRadius: 10,
+                    backgroundColor:
+                      filtro === t.value ? "#4da6ff" : "#e0e0e0",
+                  }}
+                >
+                  <Text style={{ color: filtro === t.value ? "#fff" : "#333" }}>
+                    {t.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        )}
 
         {/* TOTAL */}
-        <View
-          style={{
-            backgroundColor: "#fff",
-            padding: 18,
-            borderRadius: 15,
-            marginTop: 20,
-          }}
-        >
-          <Text style={{ color: "#888" }}>Total</Text>
-          <Text style={{ fontSize: 22, fontWeight: "700" }}>
-            {total.toFixed(2)} kg
-          </Text>
-        </View>
+        {tipo !== "insumos" && (
+          <View
+            style={{
+              backgroundColor: "#fff",
+              padding: 18,
+              borderRadius: 15,
+              marginTop: 20,
+            }}
+          >
+            <Text style={{ color: "#888" }}>Total</Text>
+            <Text style={{ fontSize: 22, fontWeight: "700" }}>
+              {total.toFixed(2)} kg
+            </Text>
+          </View>
+        )}
 
         {/* LISTA */}
         {data.map((item) => (
@@ -233,14 +255,45 @@ export default function Reportes() {
             {tipo === "insumos" ? (
               <>
                 <Text>🧾 {item.descripcion}</Text>
+                <Text>👤 {item.usuario}</Text>
               </>
             ) : (
               <>
                 <Text>🍔 {item.tipo || item.producto}</Text>
                 <Text style={{ fontWeight: "600" }}>
-                  ⚖️ {(item.kg || item.cantidad)} kg
+                  ⚖️ {formatearMovimiento(item)}
                 </Text>
                 <Text>👤 {item.usuario}</Text>
+
+                {tipo === "produccion" && (
+                  <>
+                    <TouchableOpacity
+                      onPress={() => toggleDetalle(item.id)}
+                      style={{
+                        marginTop: 10,
+                        backgroundColor: "#4da6ff",
+                        paddingVertical: 5,
+                        paddingHorizontal: 12,
+                        borderRadius: 30,
+                        alignSelf: "flex-start",
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontWeight: "600", fontSize: 13 }}>
+                        Ver más
+                      </Text>
+                    </TouchableOpacity>
+
+                    {abiertos[item.id] && detalles[item.id] && (
+                      <View style={{ marginTop: 10 }}>
+                        {detalles[item.id].map((d, i) => (
+                          <Text key={i} style={{ fontSize: 13, color: "#555" }}>
+                            • {d.insumo} - {d.cantidad} {d.unidad}
+                          </Text>
+                        ))}
+                      </View>
+                    )}
+                  </>
+                )}
               </>
             )}
           </View>

@@ -16,7 +16,18 @@ export const initDB = async () => {
       );
     `);
 
-    // 📦 INSUMOS (YA EXISTENTE, NO SE TOCA)
+    // 🔥 USUARIOS INICIALES
+    await db.execAsync(`
+      INSERT OR IGNORE INTO usuarios (usuario, password, rol)
+      VALUES 
+      ('daiana', '2401', 'admin'),
+      ('micaela', '1983', 'operaciones'),
+      ('brian', '1424', 'ventas'),
+      ('francisco', '8154', 'ventas'),
+      ('tomas', '2412', 'admin');
+    `);
+
+    // 📦 INSUMOS
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS insumos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,15 +39,37 @@ export const initDB = async () => {
       );
     `);
 
-    // 🆕 MOVIMIENTOS (AGREGADO PARA REPORTES)
+    // 🆕 MOVIMIENTOS
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS movimientos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         tipo TEXT,
         descripcion TEXT,
-        fecha TEXT
+        fecha TEXT,
+        usuario TEXT,
+        unidad TEXT
       );
     `);
+
+    // 🔧 MIGRACIÓN SEGURA (usuario)
+    try {
+      await db.execAsync(`
+        ALTER TABLE movimientos ADD COLUMN usuario TEXT;
+      `);
+      console.log("✅ Columna usuario agregada");
+    } catch (e) {
+      console.log("ℹ️ usuario ya existe");
+    }
+
+    // 🔧 MIGRACIÓN NUEVA (unidad)
+    try {
+      await db.execAsync(`
+        ALTER TABLE movimientos ADD COLUMN unidad TEXT;
+      `);
+      console.log("✅ Columna unidad agregada");
+    } catch (e) {
+      console.log("ℹ️ unidad ya existe");
+    }
 
     console.log("✅ DB lista");
   } catch (error) {
